@@ -10,7 +10,7 @@ def parse_command_line_input(list_of_option, list_of_file_name):
 
     std = 0.001
     lamb = 0.005
-    file_name = 'Gauss'
+    file_name = 'gauss'
 
     for opt, arg in opts:
         if opt == '-s':
@@ -65,8 +65,8 @@ class eval_triage:
 
 
 def main():
-    list_of_option = ['greedy', 'distort_greedy', 'kl_triage', 'diff_submod']
-    list_of_file_name = ['sigmoid_n500d5', 'Gauss_n500d5']
+    list_of_option = ['RLSR_Reg','greedy', 'distort_greedy', 'kl_triage', 'diff_submod']
+    list_of_file_name = ['sigmoid', 'gauss']
 
     # specify std, lamb and file_name as specified in ReadMe.txt
     std, lamb, file_name = parse_command_line_input(list_of_option, list_of_file_name)
@@ -75,17 +75,20 @@ def main():
     list_of_lamb = [lamb]
     list_of_K = [0.1, 0.2, 0.3, .4, 0.5, .6, .7, .8, .9]
 
-    if 'Gauss' in file_name:
+    if 'gauss' in file_name:
         DG_T = 10
     if 'sigmoid' in file_name:
         DG_T = 20
 
-    data_file = '../Synthetic_data/data_dict_' + file_name
-    res_file = '../Synthetic_data/res_' + file_name
+    path = '../Synthetic_data/'
+
+    data_file = path + 'data_dict_' + file_name
+    res_file = path + 'res_' + file_name #+ str(std) + '_' + str(lamb)
+    print data_file
     obj = eval_triage(data_file, real_wt_std=True)
 
     for option in list_of_option:
-        if option == 'diff_submod':
+        if option == 'diff_submod' or option=='RLSR_Reg':
             param = {'std': list_of_std, 'K': list_of_K, 'lamb': list_of_lamb, 'DG_T': DG_T}
         else:
             param = {'std': list_of_std, 'K': [0.99], 'lamb': list_of_lamb, 'DG_T': DG_T}

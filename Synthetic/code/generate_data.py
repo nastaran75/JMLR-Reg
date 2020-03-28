@@ -17,6 +17,7 @@ class generate_data:
     def generate_X(self,start, end):
         self.X = rand.uniform(start, end, (self.n, self.dim))
 
+
     def white_Gauss(self, std=0.5):
         return rand.normal(0, std, self.n)
 
@@ -146,7 +147,7 @@ def main():
         file_name = 'sigmoid_n_240_d_1_inc_noise'
         path = '../Synthetic_Fig3/'
         data_file = path + file_name
-        list_of_std = [0.01]  # , 0.05, 0.1, 0.5]
+        list_of_std = [0.001]  # , 0.05, 0.1, 0.5]
         # list_of_std=np.array([0.1, 0.09, 0.08, 0.07, 0.06, 0.05, 0.04, 0.03, 0.02, 0.01, 0.005 ])
         obj = generate_data(n=240, dim=1, list_of_std=list_of_std)
         obj.generate_X(-7, 7)

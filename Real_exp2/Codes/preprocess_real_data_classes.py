@@ -221,20 +221,38 @@ class Generate_human_error:
         indices = np.arange( n )
         random.shuffle(indices)
         # err =  (( float(1)/num_cat )**2 )/20 
-        #print self.data['Y']
+        #print self.data['Y']prop={'size': 15},
         self.data['low']={}
         self.data['c']={}
         self.data['test']['c']={}
         for frac in list_of_frac:
             num_low = int(frac*n)
             self.data['low'][str(frac)]=indices[:num_low]
-            # self.data['c'][str(frac)] = np.array( [ 0.008 if i in self.data['low'][str(frac)] else 0.05 for i in range(n) ] )
-            # self.data['test']['c'][str(frac)] = np.array( [ 0.008 if nearest(i) in self.data['low'][str(frac)] else 0.16 for i in range( self.data['test']['X'].shape[0]) ] )
+            # self.data['c'][str(frac)] = np.array( [ 0.001 if i in self.data['low'][str(frac)] else 0.08 for i in range(n) ] )
+            # self.data['test']['c'][str(frac)] = np.array( [ 0.001 if nearest(i) in self.data['low'][str(frac)] else 0.15 for i in range( self.data['test']['X'].shape[0]) ] )
            # for stare 11   for messidor 0.001
+           #  self.data['c'][str(frac)] = np.array(
+           #      [0.0008 if i in self.data['low'][str(frac)] else 0.08 for i in range(n)])
+           #  self.data['test']['c'][str(frac)] = np.array(
+           #      [0.0008 if nearest(i) in self.data['low'][str(frac)] else 0.25 for i in
+           #       range(self.data['test']['X'].shape[0])])
+            # messidor final
+            # self.data['c'][str(frac)] = np.array(
+            #     [0.0001 if i in self.data['low'][str(frac)] else 0.4 for i in range(n)])
+            # self.data['test']['c'][str(frac)] = np.array(
+            #     [0.0001 if nearest(i) in self.data['low'][str(frac)] else 0.4 for i in
+            #      range(self.data['test']['X'].shape[0])])
+            #stare11 final
+            # self.data['c'][str(frac)] = np.array(
+            #     [0.0001 if i in self.data['low'][str(frac)] else 0.1 for i in range(n)])
+            # self.data['test']['c'][str(frac)] = np.array(
+            #     [0.0001 if nearest(i) in self.data['low'][str(frac)] else 0.25 for i in
+            #      range(self.data['test']['X'].shape[0])])
+            # stare5 final
             self.data['c'][str(frac)] = np.array(
                 [0.0001 if i in self.data['low'][str(frac)] else 0.1 for i in range(n)])
             self.data['test']['c'][str(frac)] = np.array(
-                [0.0001 if nearest(i) in self.data['low'][str(frac)] else 0.5 for i in
+                [0.0001 if nearest(i) in self.data['low'][str(frac)] else 0.1 for i in
                  range(self.data['test']['X'].shape[0])])
 
     def save_data(self, data_file):
@@ -271,7 +289,7 @@ def compute_dist_dict( data_file ):
 
 def main():
     path = '../Real_Data_Results/'
-    file_name = 'messidor'
+    file_name = 'stare5'
     generate_human_error( path , [file_name])
     print 'done'
     compute_dist_dict( path + 'data/' + file_name + '_pca50')

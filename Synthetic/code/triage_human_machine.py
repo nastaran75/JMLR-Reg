@@ -282,8 +282,71 @@ class triage_human_machine:
         kl_obj = kl_triage({'X': self.X, 'Y': self.Y, 'c': self.c, 'lamb': self.lamb})
         return kl_obj.get_subset(self.K)
 
+    def HT(self,v,k):
+        vsorted = np.argsort(v)
+        vsorteddec = vsorted[::-1]
+        for i in range(k,v.shape[0]):
+            v[vsorteddec[i]] = 0
+        return v
+
+
+    def CRR_subset(self):
+
+        X = self.X
+        X = np.swapaxes(X, 1, 0)
+        y = self.Y
+        y = y.reshape(y.shape[0], 1)
+        tolerance = .00001;
+        bprev = np.random.uniform(10,20,y.shape)
+        bcur = np.zeros(y.shape)
+        Xtr = X.T
+        XXtr = X.dot(Xtr)
+        XXtrInv = LA.inv(XXtr)
+        P_X = (Xtr.dot(XXtrInv)).dot(X)
+        while LA.norm(bcur-bprev)>tolerance:
+            tmp = np.copy(bcur)
+            bcur = self.HT((P_X.dot(bcur)+(np.eye(X.shape[1])-P_X).dot(y)).reshape(X.shape[1]),self.K)
+            bcur = bcur.reshape(X.shape[1],1)
+            bprev = np.copy(tmp)
+
+        subset = [i for i in range(len(bcur)) if bcur[i] != 0]
+        subset = np.array(subset)
+        w = (XXtrInv.dot(X)).dot(y-bcur)
+        w = w.reshape(w.shape[0])
+        return subset
+
+    def CRR_Reg(self):
+
+        X = self.X
+        X = np.swapaxes(X, 1, 0)
+        y = self.Y
+        y = y.reshape(y.shape[0], 1)
+        tolerance = .001;
+        bprev = np.random.uniform(10,20,y.shape)
+        bcur = np.zeros(y.shape)
+        Xtr = X.T
+        XXtr = X.dot(Xtr)
+        XXtr = XXtr + self.lamb * np.eye(self.dim)
+        XXtrInv = LA.inv(XXtr)
+        P_X = (Xtr.dot(XXtrInv)).dot(X)
+        while LA.norm(bcur-bprev)>tolerance:
+            tmp = np.copy(bcur)
+            bcur = self.HT((P_X.dot(bcur)+(np.eye(X.shape[1])-P_X).dot(y)).reshape(X.shape[1]),self.K)
+            bcur = bcur.reshape(X.shape[1],1)
+            bprev = np.copy(tmp)
+
+        subset = [i for i in range(len(bcur)) if bcur[i] != 0]
+        subset = np.array(subset)
+        w = (XXtrInv.dot(X)).dot(y-bcur)
+        w = w.reshape(w.shape[0])
+        return subset
+
+
+
     def algorithmic_triage(self, param, optim):
         self.set_param(param['lamb'], int(param['K'] * self.n))
+        if optim == 'RLSR_Reg':
+            subset = self.CRR_Reg()
         if optim == 'diff_submod':
             subset = self.sel_subset_diff_submod()
         if optim == 'greedy':

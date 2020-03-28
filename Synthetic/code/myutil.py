@@ -26,7 +26,7 @@ def ma(y, window):
 def load_data(input_file, flag=None):
     if flag == 'ifexists':
         if not os.path.isfile(input_file + '.pkl'):
-            # print 'not found', input_file
+            print 'not found', input_file
             return {}
     # print 'found'
     with open(input_file + '.pkl', 'rb') as f:

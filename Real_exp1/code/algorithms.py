@@ -1,5 +1,5 @@
 import math
-from triage_class import *
+from baseline_classes import *
 import numpy as np
 import numpy.linalg as LA
 import random
@@ -70,11 +70,7 @@ class triage_human_machine:
                 return True, subset_with_null
             else:
                 ind_e = np.where(subset == e)[0]
-                # print 'subset',subset
                 subset[ind_e] = d
-                # print '-----------------------'
-                # print subset
-                # print '-----------------------'
                 return True, subset
         # print 'No Exchange'
         # print 'curr function --> ',g_m_subset
@@ -86,7 +82,6 @@ class triage_human_machine:
         approx = 1 + self.epsilon / float(self.n ** 4)
         curr_subset = np.array([g_m.find_max_elm(ground_set)])
         while True:
-            # start = time.time()
             # print ' ---   Delete ----- '
             flag_delete, curr_subset = self.check_delete(g_m, curr_subset, approx)
             if flag_delete:
@@ -100,18 +95,12 @@ class triage_human_machine:
                     pass  # print 'exchanged'
                 else:
                     break
-        # print '---------------Subset----------------------------------'
-        # finish = time.time()
-        # print '-----------------------------'
-        # print 'Time -- > ', finish-start
-        # print 'Subset', curr_subset
         return curr_subset
 
     def constr_submod_max_greedy(self, g_m, K):
         # print 'constr submod max greedy'
         curr_set = np.array([]).astype(int)
-        # print 'K',K
-        # print 'start val---------->', g_m.eval(curr_set)
+
         for itr in range(K):
             vector, subset_left = g_m.get_inc_arr(curr_set)
             if np.max(vector) <= 0:
@@ -119,12 +108,9 @@ class triage_human_machine:
 
             idx_to_add = subset_left[np.argmax(vector)]
             curr_set = self.get_added(curr_set, idx_to_add)
-        # print 'Iteration ',itr,'_______',g_m.eval(curr_set)
-        # print 'final------------> ',g_m.eval(curr_set)
         return curr_set
 
     def constr_submod_max(self, g_m, K):
-
         ground_set = self.V
         # print '----- local search 1 '
         start = time.time()
@@ -145,10 +131,9 @@ class triage_human_machine:
         subset_old = np.array([])
         g_f = G({'X': self.X, 'Y': self.Y, 'c': self.c, 'lamb': self.lamb})
         val_old = g_f.eval(subset_old)
-        # print 'VAl---------------> ',val_old
         itr = 0
+
         while True:
-            # print '-----Diff submod greedy----------Iter ', itr, '  ---------------------------------------'
             # print 'modular upper bound '
             f = F({'X': self.X, 'Y': self.Y, 'c': self.c, 'lamb': self.lamb})
             m_f = f.modular_upper_bound(subset_old)
@@ -157,13 +142,11 @@ class triage_human_machine:
 
             # check whether g-f really improve
             val_curr = g_f.eval(subset)
-            # print 'VAl---------------> ',val_curr
             if val_curr <= val_old:
                 return subset_old
 
             if set(subset) == set(subset_old):
                 return subset
-
             else:
                 subset_old = subset
                 val_old = val_curr
@@ -200,7 +183,7 @@ class triage_human_machine:
         subset_c_l = self.n - subset.shape[0]
         return LA.inv(self.lamb * subset_c_l * np.eye(self.dim) + X_sub.dot(X_sub.T)).dot(X_sub.dot(Y_sub))
 
-    def plot_subset(self, w, subset, K):
+    def plot_subset(self, w, subset):
         plt_obj = {}
 
         x = self.X[subset, 0].flatten()
@@ -219,7 +202,6 @@ class triage_human_machine:
         return plt_obj
 
     def distort_greedy(self, g, K, gamma):
-
         c_mod = modular_distort_greedy({'X': self.X, 'Y': self.Y, 'c': self.c, 'lamb': self.lamb})
         subset = np.array([]).astype(int)
         g.reset()
@@ -247,9 +229,11 @@ class triage_human_machine:
         g.reset()
         s = int(math.ceil(self.n * np.log(float(1) / epsilon) / float(K)))
         print 'subset_size', s, 'K-->', K, ', n --> ', self.n
+
         for itr in range(K):
             frac = (1 - gamma / float(K)) ** (K - itr - 1)
             subset_c = self.get_c(subset)
+
             if s < subset_c.shape[0]:
                 subset_choosen = np.array(random.sample(subset_c, s))
             else:
@@ -259,22 +243,26 @@ class triage_human_machine:
             g_inc_arr, subset_c_ret = g.get_inc_arr(subset, rest_flag=True, subset_rest=subset_choosen)
             g_pos_inc = g_inc_arr + c_mod_inc
             inc_vec = frac * g_pos_inc - c_mod_inc
+
             if np.max(inc_vec) <= 0:
                 return subset
+
             sel_ind = np.argmax(inc_vec)
             elm = subset_choosen[sel_ind]
             subset = self.get_added(subset, elm)
             g.update_data_str(elm)
+
         return subset
 
-    def gamma_sweep_distort_greedy(self, flag_stochastic=None):
+    def gamma_sweep_distort_greedy(self, delta=0.01, T=5, flag_stochastic=None):
         g = G({'X': self.X, 'Y': self.Y, 'c': self.c, 'lamb': self.lamb})
-        delta = 0.01
         Submod_ratio = 0.7
-        T = 5
+        if T != 5:
+            delta = 0.05
         subset = {}
         G_subset = []
         gamma = 1.0
+
         for r in range(T + 1):
             if flag_stochastic:
                 subset_sel = self.stochastic_distort_greedy(g, self.K, gamma, delta)
@@ -283,56 +271,124 @@ class triage_human_machine:
             subset[str(r)] = subset_sel
             G_subset.append(g.eval(subset_sel))
             gamma = gamma * (1 - delta)
-        # print time.time() - start
         empty_set = np.array([]).astype(int)
         subset[str(T + 1)] = empty_set
         G_subset.append(g.eval(empty_set))
         max_set_ind = np.argmax(np.array(G_subset))
+
         return subset[str(max_set_ind)]
 
     def max_submod_greedy(self):
-
         curr_set = np.array([]).astype(int)
         g = G({'X': self.X, 'Y': self.Y, 'c': self.c, 'lamb': self.lamb})
         # print 'Need to select ', self.K , ' items'
-        start = time.time()
         for itr in range(self.K):
             vector, subset_left = g.get_inc_arr(curr_set)
             idx_to_add = subset_left[np.argmax(vector)]
             curr_set = self.get_added(curr_set, idx_to_add)
             g.update_data_str(idx_to_add)
 
-            if itr % 50 == 0:
-                time_r = time.time() - start
-
         return curr_set
 
     def kl_triage_subset(self):
         kl_obj = kl_triage({'X': self.X, 'Y': self.Y, 'c': self.c, 'lamb': self.lamb})
-        tmp = kl_obj.get_subset(self.K)
         return kl_obj.get_subset(self.K)
+
+    def hard_threshold(self, v, k):
+        vsorted = np.argsort(v)
+        vsorteddec = vsorted[::-1]
+
+        for i in range(k, v.shape[0]):
+            v[vsorteddec[i]] = 0
+
+        return v
+
+    def CRR_subset(self):
+        X = self.X
+        X = np.swapaxes(X, 1, 0)
+        y = self.Y
+        y = y.reshape(y.shape[0], 1)
+
+        tolerance = .001
+        bprev = np.random.uniform(10, 20, y.shape)
+        bcur = np.zeros(y.shape)
+        Xtr = X.T
+        XXtr = X.dot(Xtr)
+        XXtrInv = LA.inv(XXtr)
+        P_X = (Xtr.dot(XXtrInv)).dot(X)
+
+        while LA.norm(bcur - bprev) > tolerance:
+            tmp = np.copy(bcur)
+            bcur = self.hard_threshold((P_X.dot(bcur) + (np.eye(X.shape[1]) - P_X).dot(y)).reshape(X.shape[1]), self.K)
+            bcur = bcur.reshape(X.shape[1], 1)
+            bprev = np.copy(tmp)
+
+        subset = [i for i in range(len(bcur)) if bcur[i] != 0]
+        subset = np.array(subset)
+        w = (XXtrInv.dot(X)).dot(y - bcur)
+        w = w.reshape(w.shape[0])
+        return subset
+
+    def CRR_Reg(self):
+        X = self.X
+        X = np.swapaxes(X, 1, 0)
+        y = self.Y
+        y = y.reshape(y.shape[0], 1)
+
+        tolerance = .001
+        bprev = np.random.uniform(10, 20, y.shape)
+        bcur = np.zeros(y.shape)
+        Xtr = X.T
+        XXtr = X.dot(Xtr)
+        XXtr = XXtr + self.lamb * np.eye(self.dim)  # regularized
+        XXtrInv = LA.inv(XXtr)
+        P_X = (Xtr.dot(XXtrInv)).dot(X)
+
+        while LA.norm(bcur - bprev) > tolerance:
+            tmp = np.copy(bcur)
+            bcur = self.hard_threshold((P_X.dot(bcur) + (np.eye(X.shape[1]) - P_X).dot(y)).reshape(X.shape[1]), self.K)
+            bcur = bcur.reshape(X.shape[1], 1)
+            bprev = np.copy(tmp)
+
+        subset = [i for i in range(len(bcur)) if bcur[i] != 0]
+        subset = np.array(subset)
+        w = (XXtrInv.dot(X)).dot(y - bcur)
+        w = w.reshape(w.shape[0])
+        return subset
 
     def algorithmic_triage(self, param, optim):
         # start=time.time()
         self.set_param(param['lamb'], int(param['K'] * self.n))
 
+        if optim == 'RLSR':
+            subset = self.CRR_subset()
+
+        if optim == 'RLSR_Reg':
+            subset = self.CRR_Reg()
+
         if optim == 'diff_submod':
             subset = self.sel_subset_diff_submod()
+
         if optim == 'greedy':
             subset = self.max_submod_greedy()
+
         if optim == 'diff_submod_greedy':
             subset = self.sel_subset_diff_submod_greedy()
+
         if optim == 'distort_greedy':
-            subset = self.gamma_sweep_distort_greedy(flag_stochastic=False)
+            subset = self.gamma_sweep_distort_greedy(T=param['DG_T'], flag_stochastic=False)
+
         if optim == 'kl_triage':
             subset = self.kl_triage_subset()
+
         if optim == 'stochastic_distort_greedy':
             subset = self.gamma_sweep_distort_greedy(flag_stochastic=True)
-        # print 'subset_size', subset.shape
+
         if subset.shape[0] == self.n:
             w_m = 0
         else:
             w_m = self.get_optimal_pred(subset)
+        # print w_m
 
         plt_obj = {'w': w_m, 'subset': subset}
         return plt_obj

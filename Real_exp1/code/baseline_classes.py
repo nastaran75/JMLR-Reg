@@ -1,9 +1,6 @@
-from myutil import *
 import numpy as np
-import numpy.random as rand
 import numpy.linalg as LA
-import random
-import time
+import matplotlib.pyplot as plt
 
 
 class kl_triage:
@@ -56,7 +53,6 @@ class Submodularity_ratio:
         for i in range(dim):
             feature = X[:, i]
             X[:, i] = np.true_divide(feature, LA.norm(feature.flatten()))
-
         return X
 
     def get_c(self, subset):
@@ -79,7 +75,6 @@ class Submodularity_ratio:
         return self.g.eval_l(subset)
 
     def get_L(self):
-
         F_V = - self.g.eval(self.V)
         F_V_k = np.array([- self.g.eval(self.get_c(np.array([k]))) for k in range(self.n)])
         diff_f = np.zeros((self.n, self.n))
@@ -131,7 +126,6 @@ class modular_distort_greedy:
         self.initialize()
 
     def initialize(self):
-
         G_null = self.g.eval(np.array([]).astype(int))
         self.null_val = max(0.0, - self.g.eval(np.array([]).astype(int)))
 
